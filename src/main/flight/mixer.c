@@ -847,13 +847,6 @@ void mixTable(void)
         for (i = 0; i < motorCount; i++) {
         	motor[i] = rollPitchYawMix[i] + constrainf(throttle * currentMixer[i].throttle, throttleMin, throttleMax);
 
-			// Motor stop handling
-			if (feature(FEATURE_MOTOR_STOP)) {
-				if (((rcData[THROTTLE]) < rxConfig->mincheck)) {
-					motor[i] = escAndServoConfig->mincommand;
-				}
-			}
-
 			// TODO - Should probably not be needed, but keep it till it is investigated.
 			if (isFailsafeActive) {
 				motor[i] = constrain(motor[i], escAndServoConfig->mincommand, escAndServoConfig->maxthrottle);
@@ -868,7 +861,7 @@ void mixTable(void)
 			}
 
 			// Motor stop handling
-			if (feature(FEATURE_MOTOR_STOP) && ARMING_FLAG(ARMED) && !feature(FEATURE_3D)) {
+			if (feature(FEATURE_MOTOR_STOP) && ARMING_FLAG(ARMED) && !feature(FEATURE_3D) && !(IS_RC_MODE_ACTIVE(BOXAIRMODE))) {
 				if (((rcData[THROTTLE]) < rxConfig->mincheck)) {
 					motor[i] = escAndServoConfig->mincommand;
 
