@@ -2,7 +2,7 @@
 
 The OpenPilot Revolution aka Revo is a board more tuned to Acrobatic flying or GPS based
 auto-piloting.  It has three sensors, the MPU6000 SPI based Accelerometer/Gyro, the MS5611 barometric pressure sensor and the and the Honeywell HMC5883L three axis digital compass module. 
-It also features a 16Mbit SPI based EEPROM chip.  It has 6 ports labeled as inputs (one pin each)
+It also features a 2Mbit SPI based EEPROM chip.  It has 8 ports labeled as inputs (one pin each)
 and 6 ports labeled as motor/servo outputs (3 pins each).
 
 It uses an STM32F4 MCU with 1 MB of flash storage , 192 Kb of RAM and runs at 168 MHz.
@@ -19,20 +19,23 @@ All Cleanflight support is untested, please report success or failure if you try
 ////////////// All below is untocuhed from CC3D documentation.
 # Pinouts
 
-The 8 pin RC_Input connector has the following pinouts when used in RX_PPM/RX_SERIAL mode
+The 10 pin Flexi_IO connector has the following pinouts when used in RX_PPM/RX_PARALLEL_PWM mode
 
 | Pin | Function  | Notes                            |
 | --- | --------- | -------------------------------- |
 | 1   | Ground    |                                  |
 | 2   | +5V       |                                  |
-| 3   | PPM Input | Enable `feature RX_PPM`     | 
-| 4   | SoftSerial1 TX / Sonar trigger | |
-| 5   | SoftSerial1 RX / Sonar Echo    | |
-| 6   | Current   | Enable `feature CURRENT_METER`.  Connect to the output of a current sensor, 0v-3.3v input |
-| 7   | Battery Voltage sensor | Enable `feature VBAT`. Connect to main battery using a voltage divider, 0v-3.3v input |
-| 8   | RSSI      | Enable `feature RSSI_ADC`.  Connect to the output of a PWM-RSSI conditioner, 0v-3.3v input |
+| 3   | | | 
+| 4   | | |
+| 5   | PWM input 1 / PPM input 1-8 | Enable `feature RX_PPM` | 
+| 6   | PWM input 2 | |
+| 7   | PWM input 3 / USART6 Tx | |
+| 8   | PWM input 4 / USART6 RX | |
+| 9   | PWM input 5 | |
+| 10  | PWM input 6 | |
 
-The 6 pin RC_Output connector has the following pinouts when used in RX_PPM/RX_SERIAL mode
+
+The 6 pin RC_Output connector has the following pinouts when used in RX_PPM/RX_PARALLEL_PWM mode
 
 | Pin | Function  | Notes |
 | --- | ----------| ------|
@@ -43,30 +46,6 @@ The 6 pin RC_Output connector has the following pinouts when used in RX_PPM/RX_S
 | 5   | LED Strip |       |
 | 6   | Unused    |       |
 
-The 8 pin RC_Input connector has the following pinouts when used in RX_PARALLEL_PWM mode
-
-| Pin | Function | Notes |
-| --- | ---------| ------|
-| 1   | Ground   |       |
-| 2   | +5V      |       |
-| 3   | Unused   |       | 
-| 4   | CH1      |       |
-| 5   | CH2      |       |
-| 6   | CH3      |       |
-| 7   | CH4/Battery Voltage sensor      | CH4 if battery voltage sensor is disabled |
-| 8   | CH5/CH4  | CH4 if battery voltage monitor is enabled|
-
-The 6 pin RC_Output connector has the following pinouts when used in RX_PARALLEL_PWM mode
-
-| Pin | Function | Notes |
-| --- | ---------| ------|
-| 1   | MOTOR 1  |       |
-| 2   | MOTOR 2  |       |
-| 3   | MOTOR 3  |       |
-| 4   | MOTOR 4  |       |
-| 5   | Unused   |       |
-| 6   | Unused   |       |
-
 # Serial Ports
 
 | Value | Identifier   | Board Markings | Notes                                     |
@@ -74,21 +53,30 @@ The 6 pin RC_Output connector has the following pinouts when used in RX_PARALLEL
 | 1     | VCP          | USB PORT       |                                           |
 | 2     | USART1       | MAIN PORT      | Connected to an MCU controllable inverter |
 | 3     | USART3       | FLEX PORT      |                                           |
-| 4     | SoftSerial   | RC connector   | Pins 4 and 5 (Tx and Rx respectively)     |
+| 4     | USART6       | Flexi-IO       | Pins 7 and 8 (Tx and Rx respectively)     |
 
-The SoftSerial port is not available when RX_PARALLEL_PWM is used. The transmission data rate is limited to 19200 baud.
+USART6 is not available when RX_PARALLEL_PWM is used.
 
-To connect the GUI to the flight controller you just need a USB cable to use the Virtual Com Port (VCP) or you can use UART1 (Main Port).
-
-CLI access is only available via the VCP by default.
+To connect the GUI to the flight controller you just need a USB cable to use the Virtual Com Port (VCP) or you can use USART3 (FLEX Port 9600 baud).
 
 # Main Port
 
-The main port has MSP support enabled on it by default.
-
 The main port is connected to an inverter which is automatically enabled as required.  For example, if the main port is used for SBus Serial RX then an external inverter is not required.
 
+## Main port pinout
+
+| Pin | Signal             | Notes                   |
+| --- | ------------------ | ----------------------- |
+| 1   | GND                |                         |
+| 2   | VCC unregulated    |                         |
+| 3   | USART1 TX          | 3.3v level              |
+| 4   | USART1 RX          | 3.3v level (5v tolerant)|
+
 # Flex Port
+
+The Revo uses the same FlexiPort as the CC3D. The port can be used as either a UART or for I2C bus connectivity. It can be connected to serial devices like the OP GPS or any I2C device like the the EagleTree Airspeed expander module, ADCs, I2C ESCs and a lot more. It can also be used to connect Spektrum DSM2/DSMX Satellite to be used as receiver, or any other custom component interfacing with I2C or a serial connection including custom extension boards. Of course, it’s also possible to run a serial Telemetry link to the GCS over the FlexiPort.
+
+The Flex port has MSP support enabled on it by default 9600 Baud.
 
 The flex port will be enabled in I2C mode unless USART3 is used.  You can connect external I2C sensors and displays to this port.
 
@@ -101,8 +89,33 @@ You cannot use USART3 and I2C at the same time.
 | 1   | GND                |                         |
 | 2   | VCC unregulated    |                         |
 | 3   | I2C SCL / UART3 TX | 3.3v level              |
-| 4   | I2C SDA / UART3 RX | 3.3v level (5v tolerant |
+| 4   | I2C SDA / UART3 RX | 3.3v level (5v tolerant)|
 
+# Current/Sonar Port
+
+This port can be configured to accommodate an Autopilot current sensor and a low cost Sonar sensor such as the HC-SR04. It can also be used as a general purpose input/output port or as a one or two channel analog input port.
+
+## Current/Sonar port pinout
+
+| Pin | Signal             | Notes                   |
+| --- | ------------------ | ----------------------- |
+| 1   | GND                |                         |
+| 2   | VCC unregulated    |                         |
+| 3   | Current | 3.3v level              |
+| 4   | Voltage | 3.3v level (5v tolerant)|
+
+# SWD Port
+
+Serial wire debug port. This allows the use of cheap boards like the STM F4 Discovery as an in-circuit debugger to ease the firmware development.
+
+## SWD port pinout
+
+| Pin | Pin Description    |
+| --- | ------------------ |
+| 1   | GND                |
+| 2   | NRS                |
+| 3   | IO                 |
+| 4   | CLK                |
 
 # Flashing
 
